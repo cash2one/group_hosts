@@ -1,0 +1,24 @@
+{
+    "debug": true,
+
+    "portal_db": {
+        "host": "10.103.16.30",
+        "port":3306,
+        "user":"falcon",
+        "password":"0facd04df46c907a",
+        "db": "falcon_portal"
+    },
+    "machine_db": {
+        "host": "10.101.1.140",
+        "port":3306,
+        "user":"worker",
+        "password":"services",
+        "db": "MachineToolManageDB"
+    },
+    "creator": "ops",
+    "transfer":{
+        "addr":"10.103.16.30",
+        "port":8433
+    }
+
+}
