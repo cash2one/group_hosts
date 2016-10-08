@@ -47,6 +47,7 @@ machine_db = config.get('machine_db')
 portal_db = config.get('portal_db')
 creator = config.get('creator')
 transfer = config.get('transfer')
+data_grp = config.get("data_grp")
 
 if not machine_db or not portal_db or not transfer:
     log.error("config file error,check it")
