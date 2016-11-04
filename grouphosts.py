@@ -77,22 +77,6 @@ class DB(object):
             num += 1
             time.sleep(stime)
 
-#
-# def get_host_by_hostname(conn, name):
-#     cursor = conn.execute('''select id from host where hostname=%s''', (name,))
-#     host_id = cursor.fetchone()
-#     cursor and cursor.close()
-#     if host_id is not None:
-#         return host_id[0]
-#     return None
-
-
-# def get_group_host(conn, grp_id, host_id):
-#     cursor = conn.execute("select * from grp_host where grp_id=%s and host_id=%s", (grp_id, host_id))
-#     exist = cursor.fetchone()
-#     cursor and cursor.close()
-#     return exist
-
 
 def get_namespace(mm_conn, id, path):
     cursor = mm_conn.execute("select des,parent from namespace where namespace_id=%s", (id,))
@@ -264,8 +248,8 @@ def del_grp_host(conn, grp_name, grp_id, host_id):
 
 
 if __name__ == '__main__':
-    flag = True
     while True:
+        flag = True
         mm_conn = DB(machine_db.get('host'), machine_db.get('port'), machine_db.get('user'),
                      machine_db.get('password'), machine_db.get('db'))
 
@@ -286,13 +270,9 @@ if __name__ == '__main__':
                     namespace = r['namespace']
                     update_group(fp_conn, namespace)
 
-            machine_hosts = set()
             for record in namespace_hostid:
                 namespace = record['namespace']
                 hostids = record['hostid']
-
-                # 统计机器管理中同步过来的所有机器
-                machine_hosts.update(hostids)
 
                 # 为每个namespace都建立一个group,写入portal
                 grp_id = get_grp_id(fp_conn, namespace)
@@ -312,100 +292,6 @@ if __name__ == '__main__':
                     for h in hostids:
                         if h not in group_hosts:
                             add_host(fp_conn, namespace, grp_id, h)
-
-            # 删除host表中冗余的机器:既不在机器管理中,也不在group中(除base组,base组中的机器就是host表中的所有机器)
-            # result = get_all_group_hosts(fp_conn)
-            # all_group_hosts = [x[0] for x in result]
-            #
-            # machine_hosts.update(all_group_hosts)
-
-            # result = get_all_host(fp_conn)
-            # all_hosts = [x[0] for x in result]
-
-            # #还需要判断该机器无数据上传才删除???
-            # for h in all_hosts:
-            #     if h not in machine_hosts:
-            #         del_from_host(fp_conn, h)
-
-            # 获取所有机器列表,将data组的机器加到data组,hadoop2组机器加入hadoop组,其余都加到base组
-            result = get_all_host(fp_conn)
-            all_hosts = []
-            data_grp_hosts = []
-            hadoop2_grp_hosts = []
-
-            for x in result:
-                c = 0
-                ip = get_hostip(fp_conn, x[0])
-                hostname = get_hostname(fp_conn, x[0])
-                if ip and ip[:8] in data_grp:
-                    c = 1
-                    data_grp_hosts.append(x[0])
-
-                if hostname and hostname.startswith("hadoop2-"):
-                    c = 1
-                    hadoop2_grp_hosts.append(x[0])
-
-                if c == 1:
-                    continue
-
-                all_hosts.append(x[0])
-
-            # 放入base组
-            base_id = get_grp_id(fp_conn, "base")
-            if base_id is None:
-                base_id = add_group(fp_conn, "base")
-            else:
-                if flag:
-                    update_group(fp_conn, "base")
-
-            result = get_hostids(fp_conn, base_id)
-            base_hosts = [x[0] for x in result]
-
-            for h in base_hosts:
-                if h not in all_hosts:
-                    del_grp_host(fp_conn, "base", base_id, h)
-
-            for h in all_hosts:
-                if h not in base_hosts:
-                    add_host(fp_conn, "base", base_id, h)
-
-            #放入data组
-            data_id = get_grp_id(fp_conn, "data")
-            if data_id is None:
-                data_id = add_group(fp_conn, "data")
-            else:
-                if flag:
-                    update_group(fp_conn, "data")
-
-            result = get_hostids(fp_conn, data_id)
-            data_hosts = [x[0] for x in result]
-
-            for h in data_grp_hosts:
-                if h not in data_hosts:
-                    add_host(fp_conn, "data", data_id, h)
-
-            for h in data_hosts:
-                if h not in data_grp_hosts:
-                    del_grp_host(fp_conn, "data", data_id, h)
-
-            # 放入hadoop组
-            hadoop2_id = get_grp_id(fp_conn, "hadoop2")
-            if hadoop2_id is None:
-                hadoop2_id = add_group(fp_conn, "hadoop2")
-            else:
-                if flag:
-                    update_group(fp_conn, "hadoop2")
-
-            result = get_hostids(fp_conn, hadoop2_id)
-            hadoop2_hosts = [x[0] for x in result]
-
-            for h in hadoop2_grp_hosts:
-                if h not in hadoop2_hosts:
-                    add_host(fp_conn, "hadoop2", hadoop2_id, h)
-
-            for h in hadoop2_hosts:
-                if h not in hadoop2_grp_hosts:
-                    del_grp_host(fp_conn, "hadoop2", hadoop2_id, h)
 
             mm_conn._conn.close()
             fp_conn._conn.close()
