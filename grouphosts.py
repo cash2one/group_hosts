@@ -248,8 +248,8 @@ def del_grp_host(conn, grp_name, grp_id, host_id):
 
 
 if __name__ == '__main__':
+    flag = True
     while True:
-        flag = True
         mm_conn = DB(machine_db.get('host'), machine_db.get('port'), machine_db.get('user'),
                      machine_db.get('password'), machine_db.get('db'))
 
@@ -257,7 +257,7 @@ if __name__ == '__main__':
                      portal_db.get('password'), portal_db.get('db'))
 
         if  mm_conn._conn and  fp_conn._conn:
-            # 从cmdb中更新命名空间以及其对应的机器信息
+            # 从machineTool中更新命名空间以及其对应的机器信息
             namespace_hostid = get_hostid_by_namespace(mm_conn, fp_conn)
 
             if not namespace_hostid:
